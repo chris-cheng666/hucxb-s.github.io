@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>环境监测系统登录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+
+        body {
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        /* 标题 */
+        h1 {
+            font-size: 32px;
+            color: #222;
+            margin-bottom: 10px;
+        }
+        .en-title {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        /* 表单容器 */
+        .login-form {
+            width: 450px;
+        }
+
+        /* 输入项 */
+        .form-item {
+            margin-bottom: 25px;
+        }
+        .form-item label {
+            display: block;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .input-box {
+            position: relative;
+        }
+        .input-box input {
+            width: 100%;
+            padding: 15px 50px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .input-box .icon-left {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+        }
+        .input-box .icon-right {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+        }
+
+        /* 登录按钮 */
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(90deg, #3a4ed5, #5a37b8);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        /* 底部信息 */
+        .footer-info {
+            margin-top: 60px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <!-- 标题 -->
+    <h1>环境监测系统</h1>
+    <div class="en-title">Environmental Monitoring System</div>
+
+    <!-- 登录表单 -->
+    <div class="login-form">
+        <div class="form-item">
+            <label>用户名</label>
+            <div class="input-box">
+                <span class="icon-left">👤</span>
+                <input type="text" placeholder="请输入用户名">
+                <span class="icon-right">👤</span>
+            </div>
+        </div>
+        <div class="form-item">
+            <label>密码</label>
+            <div class="input-box">
+                <span class="icon-left">🔒</span>
+                <input type="password" placeholder="请输入密码">
+                <span class="icon-right">🔒</span>
+            </div>
+        </div>
+        <button class="login-btn">登录系统</button>
+    </div>
+
+    <!-- 底部信息 -->
+    <div class="footer-info">
+        <div>环境监测系统 v1.0</div>
+        <div>实时监测光照、温度、湿度、气压、GPS数据</div>
+        <div>技术支持：物联网实验室</div>
+    </div>
+</body>
+</html>
