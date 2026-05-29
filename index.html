@@ -26,35 +26,37 @@
         .sidebar li.active {background:#409eff;color:#fff;}
         .main {flex:1;display:flex;flex-direction:column;}
         .header {height:50px;background:#fff;border-bottom:1px solid #e6e6e6;display:flex;align-items:center;justify-content:space-between;padding:0 20px;}
-        .header .user-avatar {
-            width:30px;height:30px;border-radius:50%;background:#409eff;color:#fff;
-            display:flex;align-items:center;justify-content:center;font-size:14px;
-        }
+        .header .user-avatar {width:30px;height:30px;border-radius:50%;background:#409eff;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;}
         .content {flex:1;padding:20px;overflow-y:auto;}
         .content-page {display:none;}
         .content-page.show {display:block;}
         .tool-bar {display:flex;align-items:center;gap:10px;margin-bottom:15px;}
         .tool-bar input {flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:4px;}
         .btn-search {background:#409eff;color:#fff;border:none;padding:8px 15px;border-radius:4px;cursor:pointer;}
-        .btn-add {background:#67c23a;color:#fff;border:none;padding:8px 15px;border-radius:4px;cursor:pointer;}
         table {width:100%;border-collapse:collapse;background:#fff;}
         th,td {padding:10px;border-bottom:1px solid #eee;font-size:13px;text-align:left;}
         th {background:#f5f7fa;}
-        .role-tag-admin {background:#fdf6ec;color:#e6a23c;padding:3px 8px;border-radius:3px;font-size:12px;}
-        .role-tag-user {background:#ecf5ff;color:#409eff;padding:3px 8px;border-radius:3px;font-size:12px;}
-        .status-tag {background:#f0f9eb;color:#67c23a;padding:3px 8px;border-radius:3px;font-size:12px;}
         .btn-edit {background:#e6a23c;color:#fff;border:none;padding:4px 8px;border-radius:3px;cursor:pointer;font-size:12px;}
         .btn-del {background:#f56c6c;color:#fff;border:none;padding:4px 8px;border-radius:3px;cursor:pointer;font-size:12px;}
+        .tool-btn {padding:6px 14px;border:none;border-radius:4px;background:#409eff;color:#fff;margin-right:8px;cursor:pointer;}
+        .tool-btn.green {background:#67c23a;}
         .monitor-wrap {width:100%;height:calc(100vh - 140px);background:#fff;border-radius:8px;padding:30px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
         .monitor-icon {font-size:80px;margin-bottom:20px;color:#409eff;}
         .monitor-desc {font-size:18px;color:#333;margin-bottom:15px;}
         .monitor-data {font-size:26px;font-weight:bold;color:#222;margin:10px 0;}
         .monitor-tip {font-size:14px;color:#999;}
+        .edit-modal {position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:999;}
+        .edit-box {width:350px;background:#fff;padding:20px;border-radius:8px;}
+        .edit-box input {width:100%;margin:8px 0;padding:8px;border:1px solid #ddd;border-radius:4px;}
+        .edit-box .btn-group {display:flex;gap:10px;margin-top:15px;}
+        .edit-box button {flex:1;padding:8px;border:none;border-radius:4px;cursor:pointer;}
+        .debug-tip {position:fixed;bottom:10px;right:10px;background:#fff;padding:10px;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:12px;color:#666;}
     </style>
 </head>
 <body>
+<div class="debug-tip">按F12打开控制台查看完整请求日志</div>
 
-<!-- 登录 -->
+<!-- 登录页面 -->
 <div id="loginPage" class="box page active">
     <div class="login-logo">↙</div>
     <h1 class="login-title">环境监测系统</h1>
@@ -65,19 +67,18 @@
     <div class="switch" id="goReg">没有账号？去注册</div>
 </div>
 
-<!-- 注册 -->
+<!-- 注册页面 -->
 <div id="regPage" class="box page">
     <div class="login-logo">↙</div>
     <h1 class="login-title">用户注册</h1>
     <p class="login-subtitle">Environmental Monitoring System</p>
     <div class="input-item"><i>👤</i><input type="text" id="regUser" placeholder="用户名"></div>
-    <div class="input-item"><i>📝</i><input type="text" id="regName" placeholder="真实姓名"></div>
     <div class="input-item"><i>🔒</i><input type="password" id="regPwd" placeholder="密码"></div>
     <button class="btn" id="regBtn">注册</button>
     <div class="switch" id="goLogin">已有账号？去登录</div>
 </div>
 
-<!-- 后台 -->
+<!-- 后台主页面 -->
 <div id="adminPage" class="admin">
     <div class="container">
         <div class="sidebar">
@@ -97,176 +98,373 @@
                 <div class="user-avatar">A</div>
             </div>
             <div class="content">
-
+                <!-- 光照监测 -->
                 <div class="content-page" id="light">
+                    <div class="tool-bar">
+                        <button class="tool-btn green" onclick="startMonitor()">启动监测</button>
+                        <button class="tool-btn" onclick="stopMonitor()">停止监测</button>
+                    </div>
                     <div class="monitor-wrap">
                         <div class="monitor-icon">☀️</div>
                         <div class="monitor-desc">光照强度</div>
-                        <div class="monitor-data">-- 待采集数据 --</div>
-                        <div class="monitor-tip">单位：lux</div>
+                        <div class="monitor-data" id="lightData">-- 待采集数据 --</div>
+                        <div class="monitor-tip">单位：lux（勒克斯）</div>
                     </div>
                 </div>
-
+                <!-- 温度监测 -->
                 <div class="content-page" id="temp">
+                    <div class="tool-bar">
+                        <button class="tool-btn green" onclick="startMonitor()">启动监测</button>
+                        <button class="tool-btn" onclick="stopMonitor()">停止监测</button>
+                    </div>
                     <div class="monitor-wrap">
                         <div class="monitor-icon">🌡️</div>
                         <div class="monitor-desc">环境温度</div>
-                        <div class="monitor-data">-- 待采集数据 --</div>
-                        <div class="monitor-tip">单位：℃</div>
+                        <div class="monitor-data" id="tempData">-- 待采集数据 --</div>
+                        <div class="monitor-tip">单位：℃（摄氏度）</div>
                     </div>
                 </div>
-
+                <!-- GPS监测 -->
                 <div class="content-page" id="gps">
+                    <div class="tool-bar">
+                        <button class="tool-btn green" onclick="startMonitor()">启动监测</button>
+                        <button class="tool-btn" onclick="stopMonitor()">停止监测</button>
+                    </div>
                     <div class="monitor-wrap">
                         <div class="monitor-icon">📍</div>
-                        <div class="monitor-desc">GPS定位</div>
-                        <div class="monitor-data">-- 待采集数据 --</div>
+                        <div class="monitor-desc">GPS 定位信息</div>
+                        <div class="monitor-data" id="gpsData">-- 待采集数据 --</div>
                         <div class="monitor-tip">经度 / 纬度</div>
                     </div>
                 </div>
-
+                <!-- 湿度监测 -->
                 <div class="content-page" id="humidity">
+                    <div class="tool-bar">
+                        <button class="tool-btn green" onclick="startMonitor()">启动监测</button>
+                        <button class="tool-btn" onclick="stopMonitor()">停止监测</button>
+                    </div>
                     <div class="monitor-wrap">
                         <div class="monitor-icon">💧</div>
                         <div class="monitor-desc">空气湿度</div>
-                        <div class="monitor-data">-- 待采集数据 --</div>
-                        <div class="monitor-tip">单位：%</div>
+                        <div class="monitor-data" id="humData">-- 待采集数据 --</div>
+                        <div class="monitor-tip">单位：%（百分比）</div>
                     </div>
                 </div>
-
+                <!-- 气压监测 -->
                 <div class="content-page" id="pressure">
+                    <div class="tool-bar">
+                        <button class="tool-btn green" onclick="startMonitor()">启动监测</button>
+                        <button class="tool-btn" onclick="stopMonitor()">停止监测</button>
+                    </div>
                     <div class="monitor-wrap">
                         <div class="monitor-icon">🌪️</div>
                         <div class="monitor-desc">大气气压</div>
-                        <div class="monitor-data">-- 待采集数据 --</div>
-                        <div class="monitor-tip">单位：hPa</div>
+                        <div class="monitor-data" id="pressData">-- 待采集数据 --</div>
+                        <div class="monitor-tip">单位：hPa（百帕）</div>
                     </div>
                 </div>
-
                 <!-- 用户管理 -->
                 <div class="content-page show" id="user">
                     <div class="tool-bar">
-                        <input type="text" placeholder="搜索" id="searchInput">
-                        <button class="btn-search">搜索</button>
-                        <button class="btn-add">添加用户</button>
+                        <input type="text" placeholder="搜索用户名" id="searchInput">
+                        <button class="btn-search" id="searchBtn">搜索</button>
                     </div>
                     <table>
                         <thead>
                             <tr>
                                 <th>ID</th>
                                 <th>用户名</th>
-                                <th>真实姓名</th>
-                                <th>邮箱</th>
-                                <th>电话</th>
-                                <th>角色</th>
-                                <th>状态</th>
-                                <th>创建时间</th>
+                                <th>密码</th>
                                 <th>操作</th>
                             </tr>
                         </thead>
                         <tbody id="userTable"></tbody>
                     </table>
                 </div>
-
             </div>
         </div>
     </div>
 </div>
 
+<!-- 用户编辑弹窗 -->
+<div class="edit-modal" id="editModal">
+    <div class="edit-box">
+        <h3>编辑用户</h3>
+        <input type="hidden" id="editId">
+        <input type="text" placeholder="用户名" id="editUsername">
+        <input type="password" placeholder="密码" id="editPwd">
+        <div class="btn-group">
+            <button style="background:#67c23a;color:#fff" onclick="saveEdit()">保存</button>
+            <button style="background:#999;color:#fff" onclick="closeEdit()">取消</button>
+        </div>
+    </div>
+</div>
+
 <script>
-// 清除旧缓存（解决 GitHub undefined 关键！）
-localStorage.removeItem("users");
+// ===================== 后端基础地址 =====================
+const BASE_URL = "http://192.168.172.194:8080";
+let monitorTimer = null;
 
-let userList = [
-    { id:1, username:'admin', password:'123456', realname:'系统管理员', email:'admin@qq.com', phone:'13800001111', role:'管理员', status:'活跃', createTime:'2025-01-01' },
-    { id:2, username:'test', password:'123456', realname:'测试用户', email:'-', phone:'-', role:'普通用户', status:'活跃', createTime:'2025-01-01' }
-];
+// ===================== 【修复】通用请求封装（兼容JSON+纯文本）=====================
+async function request(api, method, data = null) {
+    const fullUrl = BASE_URL + api;
+    console.log("=== 发起请求 ===");
+    console.log("完整地址:", fullUrl);
+    console.log("请求方法:", method);
+    if (data) console.log("请求参数:", JSON.stringify(data));
 
-function renderUser(list = userList) {
-    let tb = document.getElementById('userTable');
-    tb.innerHTML = '';
-    list.forEach(u => {
-        let tr = document.createElement('tr');
-        let roleClass = u.role === '管理员' ? 'role-tag-admin' : 'role-tag-user';
+    const options = {
+        method: method.toUpperCase(),
+        headers: {
+            "Content-Type": "application/json;charset=UTF-8"
+        },
+        mode: "cors",
+        credentials: "same-origin"
+    };
+
+    if (data && (method === "POST" || method === "PUT")) {
+        options.body = JSON.stringify(data);
+    }
+
+    try {
+        const response = await fetch(fullUrl, options);
+        console.log("响应状态码:", response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP错误: ${response.status} ${response.statusText}`);
+        }
+
+        // 关键修复：自动判断响应格式
+        const contentType = response.headers.get("content-type");
+        let result;
+        if (contentType && contentType.includes("application/json")) {
+            result = await response.json();
+            console.log("后端返回JSON:", result);
+        } else {
+            result = await response.text();
+            console.log("后端返回纯文本:", result);
+        }
+
+        return result;
+    } catch (error) {
+        console.error("请求失败详情:", error);
+        alert(`连接后端失败！\n\n错误信息: ${error.message}\n\n请检查：\n1. 后端是否启动在 http://192.168.172.194:8080\n2. 后端是否配置了CORS跨域允许`);
+        return null;
+    }
+}
+
+// ===================== 用户模块 =====================
+// 1. 注册 POST /api/user/register
+document.getElementById("regBtn").onclick = async function () {
+    const username = document.getElementById("regUser").value.trim();
+    const password = document.getElementById("regPwd").value.trim();
+    
+    if (!username || !password) {
+        alert("用户名和密码不能为空");
+        return;
+    }
+
+    const result = await request("/api/user/register", "POST", { username, password });
+    if (result !== null) {
+        // 兼容纯文本和JSON两种返回
+        const msg = typeof result === "string" ? result : (result.msg || "注册成功");
+        alert(msg);
+        document.getElementById("regPage").classList.remove("active");
+        document.getElementById("loginPage").classList.add("active");
+        document.getElementById("regUser").value = "";
+        document.getElementById("regPwd").value = "";
+    }
+};
+
+// 2. 登录 POST /api/user/login
+document.getElementById("loginBtn").onclick = async function () {
+    const username = document.getElementById("loginUser").value.trim();
+    const password = document.getElementById("loginPwd").value.trim();
+    
+    if (!username || !password) {
+        alert("用户名和密码不能为空");
+        return;
+    }
+
+    const result = await request("/api/user/login", "POST", { username, password });
+    if (result !== null) {
+        const msg = typeof result === "string" ? result : (result.msg || "登录成功");
+        alert(msg);
+        // 只要HTTP状态码是200就认为登录成功
+        document.querySelector(".page.active").classList.remove("active");
+        document.getElementById("adminPage").style.display = "block";
+        await getUserList();
+    }
+};
+
+// 3. 查询所有用户 GET /api/user/list
+async function getUserList() {
+    const result = await request("/api/user/list", "GET");
+    // 用户列表必须返回JSON格式
+    const userList = result ? (result.data || result) : [];
+    renderUserTable(userList);
+}
+
+// 渲染用户表格
+function renderUserTable(list) {
+    const tbody = document.getElementById("userTable");
+    tbody.innerHTML = "";
+    
+    if (!list || list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#999">暂无用户数据</td></tr>';
+        return;
+    }
+
+    list.forEach(user => {
+        const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td>${u.id}</td>
-            <td>${u.username}</td>
-            <td>${u.realname}</td>
-            <td>${u.email}</td>
-            <td>${u.phone}</td>
-            <td><span class="${roleClass}">${u.role}</span></td>
-            <td><span class="status-tag">${u.status}</span></td>
-            <td>${u.createTime}</td>
+            <td>${user.id}</td>
+            <td>${user.username}</td>
+            <td>${user.password || "******"}</td>
             <td>
-                <button class="btn-edit">编辑</button>
-                <button class="btn-del" onclick="delUser(${u.id})">删除</button>
+                <button class="btn-edit" onclick="openEdit(${user.id}, '${user.username}', '${user.password || ""}')">修改</button>
+                <button class="btn-del" onclick="deleteUser(${user.id})">删除</button>
             </td>
         `;
-        tb.appendChild(tr);
+        tbody.appendChild(tr);
     });
 }
 
-window.delUser = (id) => {
-    if(confirm('确定删除？')){
-        userList = userList.filter(x => x.id !== id);
-        renderUser();
+// 4. 修改用户 PUT /api/user/update
+function openEdit(id, username, password) {
+    document.getElementById("editId").value = id;
+    document.getElementById("editUsername").value = username;
+    document.getElementById("editPwd").value = password;
+    document.getElementById("editModal").style.display = "flex";
+}
+
+function closeEdit() {
+    document.getElementById("editModal").style.display = "none";
+}
+
+async function saveEdit() {
+    const id = parseInt(document.getElementById("editId").value);
+    const username = document.getElementById("editUsername").value.trim();
+    const password = document.getElementById("editPwd").value.trim();
+    
+    if (!username || !password) {
+        alert("用户名和密码不能为空");
+        return;
+    }
+
+    const result = await request("/api/user/update", "PUT", { id, username, password });
+    if (result !== null) {
+        const msg = typeof result === "string" ? result : (result.msg || "修改成功");
+        alert(msg);
+        closeEdit();
+        await getUserList();
     }
 }
 
-document.getElementById('goReg').onclick = () => {
-    document.getElementById('loginPage').classList.remove('active');
-    document.getElementById('regPage').classList.add('active');
-}
-document.getElementById('goLogin').onclick = () => {
-    document.getElementById('regPage').classList.remove('active');
-    document.getElementById('loginPage').classList.add('active');
+// 5. 删除用户 DELETE /api/user/delete/{id}
+async function deleteUser(id) {
+    if (!confirm("确定要删除该用户吗？")) return;
+    
+    const result = await request(`/api/user/delete/${id}`, "DELETE");
+    if (result !== null) {
+        const msg = typeof result === "string" ? result : (result.msg || "删除成功");
+        alert(msg);
+        await getUserList();
+    }
 }
 
-document.getElementById('regBtn').onclick = () => {
-    let un = document.getElementById('regUser').value.trim();
-    let rn = document.getElementById('regName').value.trim();
-    let pwd = document.getElementById('regPwd').value.trim();
-    if(!un||!rn||!pwd) return alert('不能为空');
-    if(userList.find(x=>x.username===un)) return alert('用户名已存在');
-    let newId = userList.length+1;
-    userList.push({
-        id:newId, username:un, password:pwd, realname:rn,
-        email:'-', phone:'-', role:'普通用户', status:'活跃', createTime:'2025-01-01'
+// 前端搜索
+document.getElementById("searchBtn").onclick = function () {
+    const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
+    getUserList().then(() => {
+        const rows = document.querySelectorAll("#userTable tr");
+        rows.forEach(row => {
+            const username = row.children[1].innerText.toLowerCase();
+            row.style.display = username.includes(keyword) ? "" : "none";
+        });
     });
-    alert('注册成功！');
-    document.getElementById('regPage').classList.remove('active');
-    document.getElementById('loginPage').classList.add('active');
-}
+};
 
-document.getElementById('loginBtn').onclick = () => {
-    let un = document.getElementById('loginUser').value.trim();
-    let pwd = document.getElementById('loginPwd').value.trim();
-    let user = userList.find(x=>x.username===un && x.password===pwd);
-    if(user){
-        document.querySelector('.page.active').classList.remove('active');
-        document.getElementById('adminPage').style.display='block';
-        renderUser();
-    }else{
-        alert('用户名或密码错误');
+// ===================== 环境数据模块 =====================
+// 1. 添加环境数据 POST /api/env/add
+async function addEnvData() {
+    const envData = {
+        light: Math.floor(Math.random() * 10000),
+        temperature: parseFloat((Math.random() * 20 + 10).toFixed(1)),
+        humidity: Math.floor(Math.random() * 60 + 30),
+        pressure: Math.floor(Math.random() * 200 + 980),
+        latitude: parseFloat((Math.random() * 90 + 30).toFixed(4)),
+        longitude: parseFloat((Math.random() * 90 + 110).toFixed(4))
+    };
+
+    const result = await request("/api/env/add", "POST", envData);
+    if (result !== null) {
+        document.getElementById("lightData").innerText = `${envData.light} lux`;
+        document.getElementById("tempData").innerText = `${envData.temperature} ℃`;
+        document.getElementById("humData").innerText = `${envData.humidity} %`;
+        document.getElementById("pressData").innerText = `${envData.pressure} hPa`;
+        document.getElementById("gpsData").innerText = `${envData.longitude} / ${envData.latitude}`;
     }
 }
 
-let menu = document.querySelectorAll('.sidebar li');
-let pages = document.querySelectorAll('.content-page');
-let title = document.getElementById('pageTitle');
-let map={light:'光照监测',temp:'温度监测',gps:'GPS监测',humidity:'湿度监测',pressure:'气压监测',user:'用户管理'};
-menu.forEach(m=>{
-    m.onclick=()=>{
-        menu.forEach(x=>x.classList.remove('active'));
-        m.classList.add('active');
-        let p = m.dataset.page;
-        title.innerText=map[p];
-        pages.forEach(x=>x.classList.remove('show'));
-        document.getElementById(p).classList.add('show');
-    }
-})
+// 2. 查询所有环境数据 GET /api/env/list
+async function getEnvHistory() {
+    const result = await request("/api/env/list", "GET");
+    console.log("环境历史数据:", result);
+}
 
-renderUser();
+// 启动/停止监测
+function startMonitor() {
+    if (monitorTimer) {
+        alert("监测已在运行中");
+        return;
+    }
+    monitorTimer = setInterval(addEnvData, 3000);
+    alert("监测已启动，每3秒上传一次数据");
+}
+
+function stopMonitor() {
+    if (monitorTimer) {
+        clearInterval(monitorTimer);
+        monitorTimer = null;
+        alert("监测已停止");
+    }
+}
+
+// ===================== 页面切换 =====================
+document.getElementById("goReg").onclick = () => {
+    document.getElementById("loginPage").classList.remove("active");
+    document.getElementById("regPage").classList.add("active");
+};
+
+document.getElementById("goLogin").onclick = () => {
+    document.getElementById("regPage").classList.remove("active");
+    document.getElementById("loginPage").classList.add("active");
+};
+
+// 侧边栏菜单切换
+const menuItems = document.querySelectorAll(".sidebar li");
+const contentPages = document.querySelectorAll(".content-page");
+const pageTitle = document.getElementById("pageTitle");
+const pageNameMap = {
+    light: "光照监测",
+    temp: "温度监测",
+    gps: "GPS监测",
+    humidity: "湿度监测",
+    pressure: "气压监测",
+    user: "用户管理"
+};
+
+menuItems.forEach(item => {
+    item.onclick = function () {
+        menuItems.forEach(el => el.classList.remove("active"));
+        this.classList.add("active");
+        const pageKey = this.dataset.page;
+        pageTitle.innerText = pageNameMap[pageKey];
+        contentPages.forEach(page => page.classList.remove("show"));
+        document.getElementById(pageKey).classList.add("show");
+    };
+});
 </script>
 </body>
 </html>
